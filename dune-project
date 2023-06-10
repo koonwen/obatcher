@@ -13,7 +13,7 @@
 
 (package
  (name obatcher)
- (synopsis "Framework for building Batched Concurrent Data Structures")
+ (synopsis "A Framework for building Batched Concurrent Data Structures")
  (description "")
  (depends
   (ocaml
