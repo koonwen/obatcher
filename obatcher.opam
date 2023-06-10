@@ -28,5 +28,5 @@ build: [
 ]
 dev-repo: "git+https://github.com/koonwen/obatcher.git"
 pin-depends: [
-  [ "domainslib" "git+https://github.com/koonwen/domainslib.git#upstream"]
+  [ "domainslib.upstream" "git+https://github.com/koonwen/domainslib.git#upstream"]
 ]

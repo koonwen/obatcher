@@ -9,7 +9,6 @@ DUNE 	= dune
 
 switch:
 	opam switch create . 5.0.0 --deps-only
-	opam pin -y https+git@github.com:koonwen/domainslib.git#upstream
 
 all:
 	$(DUNE) build
