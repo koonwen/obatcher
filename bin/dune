@@ -1,0 +1,4 @@
+(executable
+ (name        example)
+ (modules     example)
+ (libraries   domainslib obatcher))
