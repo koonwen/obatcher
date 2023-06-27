@@ -1,12 +1,13 @@
-module Apply (Scheduler : sig
-    type 'a task = unit -> 'a
-    type !'a promise
-    type pool
-    val async : pool -> 'a task -> 'a promise
-    val await : pool -> 'a promise -> 'a
-    val promise : unit -> 'a promise * ('a -> unit)
-  end) = struct
+module type Scheduler = sig
+  type 'a task = unit -> 'a
+  type !'a promise
+  type pool
+  val async : pool -> 'a task -> 'a promise
+  val await : pool -> 'a promise -> 'a
+  val promise : unit -> 'a promise * ('a -> unit)
+end
 
+module Apply (Task : Scheduler) = struct
   module type DS = sig
 
     type t
@@ -17,7 +18,7 @@ module Apply (Scheduler : sig
 
     val init : unit -> t
 
-    val run : t -> Scheduler.pool -> wrapped_op array -> unit
+    val run : t -> Task.pool -> wrapped_op array -> unit
 
   end
 
@@ -31,7 +32,7 @@ module Apply (Scheduler : sig
 
     val init : unit -> 'a t
 
-    val run : 'a t -> Scheduler.pool -> 'a wrapped_op array -> unit
+    val run : 'a t -> Task.pool -> 'a wrapped_op array -> unit
 
   end
 
@@ -39,7 +40,7 @@ module Apply (Scheduler : sig
   module Make (DS : DS) = struct
     type 'a op = 'a DS.op
     type t = {
-      pool : Scheduler.pool;
+      pool : Task.pool;
       mutable ds : DS.t;
       running : bool Atomic.t;
       container : DS.wrapped_op Ts_container.t
@@ -71,15 +72,15 @@ module Apply (Scheduler : sig
           let batch = Ts_container.get t.container in
           DS.run t.ds t.pool batch;
           Atomic.set t.running false;
-          ignore @@ Scheduler.async t.pool (fun () -> try_launch t)
+          ignore @@ Task.async t.pool (fun () -> try_launch t)
         end
 
     let apply t op =
-      let pr, set = Scheduler.promise () in
+      let pr, set = Task.promise () in
       let op_set = DS.Mk (op, set) in
       Ts_container.add t.container op_set;
       try_launch t;
-      Scheduler.await t.pool pr
+      Task.await t.pool pr
 
     let unsafe_get_internal_data t = t.ds
     [@@@alert unsafe "For developer use"]
@@ -93,7 +94,7 @@ module Apply (Scheduler : sig
   module Make_Poly (DS : DS_Poly) = struct
     type ('a,'b) op = ('a,'b) DS.op
     type 'a t = {
-      pool : Scheduler.pool;
+      pool : Task.pool;
       mutable ds : 'a DS.t;
       running : bool Atomic.t;
       container : 'a DS.wrapped_op Ts_container.t
@@ -124,15 +125,15 @@ module Apply (Scheduler : sig
           let batch = Ts_container.get t.container in
           DS.run t.ds t.pool batch;
           Atomic.set t.running false;
-          ignore @@ Scheduler.async t.pool (fun () -> try_launch t)
+          ignore @@ Task.async t.pool (fun () -> try_launch t)
         end
 
     let apply t op =
-      let pr, set = Scheduler.promise () in
+      let pr, set = Task.promise () in
       let op_set = DS.Mk (op, set) in
       Ts_container.add t.container op_set;
       try_launch t;
-      Scheduler.await t.pool pr
+      Task.await t.pool pr
 
     let unsafe_get_internal_data t = t.ds
     [@@@alert unsafe "For developer use"]

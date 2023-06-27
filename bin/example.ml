@@ -1,24 +1,8 @@
-module Scheduler = Domainslib.Task
-module Batcher = Obatcher.Apply (Scheduler)
-
-module Sequential = struct
+module Task = Domainslib.Task
+module Batcher = Obatcher.Apply(Task)
+module Counter = struct
 
   type t = { mutable counter: int }
-
-  let init () = {counter=0}
-
-
-  let incr t = t.counter <- t.counter + 1
-
-  let decr t = t.counter <- t.counter - 1
-
-  let get t = t.counter
-
-end
-
-module Counter : Batcher.DS = struct
-
-  type t = Sequential.t
 
   type 'a op =
     | Incr : unit op
@@ -29,10 +13,10 @@ module Counter : Batcher.DS = struct
 
   let init () : t = {counter=0}
 
-  let run (t: t) (pool: Scheduler.pool) (ops: wrapped_op array) =
+  let run (t: t) (pool: Task.pool) (ops: wrapped_op array) =
     let len = Array.length ops in
     let start = t.counter in
-    let add_n = Scheduler.parallel_for_reduce pool ~start:0 ~finish:(len-1)
+    let add_n = Task.parallel_for_reduce pool ~start:0 ~finish:(len-1)
         ~body:(fun i -> match ops.(i) with
             | Mk (Incr, set) ->  set (); 1
             | Mk (Decr, set) ->  set (); -1
@@ -40,5 +24,10 @@ module Counter : Batcher.DS = struct
     t.counter <- (start + add_n)
 end
 
-module BatchedCounter = Batcher.Make (Counter)
-
+let () =
+  let module BatchedCounter = Batcher.Make (Counter) in
+  let pool = Task.setup_pool ~num_domains:(Domain.recommended_domain_count ()) () in
+  let t = BatchedCounter.init pool in
+  BatchedCounter.apply t Incr;
+  BatchedCounter.apply t Decr;
+  BatchedCounter.apply t Get |> print_int
