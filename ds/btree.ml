@@ -533,7 +533,7 @@ module Make (V: Map.OrderedType) = struct
         let threshold = match threshold with Some _ -> threshold | None -> !btree_search_sequential_threshold in
         let par_threshold = match par_threshold with Some _ -> par_threshold | None -> !btree_search_parallel_threshold in
         (* keys is a array of (key, index) where index is the position in the original search query *)
-        ParSort.sort pool ~compare:(fun (k, _) (k', _) -> V.compare k k') keys;
+        Par_sort.sort pool ~compare:(fun (k, _) (k', _) -> V.compare k k') keys;
         (* allocate a buffer for the results *)
         par_search_node ?par_threshold ?threshold pool t.root ~height:t.height ~keys ~range:(0, Array.length keys)
 
@@ -705,7 +705,7 @@ module Make (V: Map.OrderedType) = struct
           par_search ~pool t searches;
         let inserts = Array.of_list !inserts in
         if Array.length inserts > 0 then begin
-          ParSort.sort pool ~compare:(fun (k1,_) (k2,_) -> V.compare k1 k2)
+          Par_sort.sort pool ~compare:(fun (k1,_) (k2,_) -> V.compare k1 k2)
             inserts;
           par_insert ~pool t inserts
         end

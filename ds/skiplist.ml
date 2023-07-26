@@ -284,7 +284,7 @@ module Make (V : Stdlib.Map.OrderedType) = struct
       let par_insert t (pool : Task.pool) (elems : V.t array) =
         let open Sequential in
         (* Sort in acscending order *)
-        Utils.ParSort.sort pool ~compare:V.compare elems;
+        Utils.Par_sort.sort pool ~compare:V.compare elems;
         let num_elems = remove_duplicates elems (Array.length elems) in
 
         let intermediary = {
