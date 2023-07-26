@@ -1,3 +1,0 @@
-pin-depends: [
-  [ "domainslib.upstream" "git+https://github.com/koonwen/domainslib.git#upstream"]
-]

@@ -10,6 +10,7 @@ depends: [
   "dune" {>= "3.0"}
   "ocaml" {>= "5.0.0"}
   "domainslib"
+  "kcas_data"
   "odoc" {with-doc}
 ]
 build: [
@@ -27,6 +28,3 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/koonwen/obatcher.git"
-pin-depends: [
-  [ "domainslib.upstream" "git+https://github.com/koonwen/domainslib.git#upstream"]
-]
