@@ -9,8 +9,8 @@ module type DS = sig
   (** ['a op] represents a single operation on [t] with the return type ['a]. *)
 
   type wrapped_op =
-    | Mk : 'a op * ('a Promise.u) -> wrapped_op
-    (** [wrapped_op] represents an operation on the datastructure and
+    | Mk : 'a op * 'a Promise.u -> wrapped_op
+        (** [wrapped_op] represents an operation on the datastructure and
         the continuation to run after its completion.  *)
 
   val init : unit -> t
@@ -31,8 +31,8 @@ module type DS_Poly = sig
   (** [('a, 'b) op] represents a single operation on ['a t] with the return type ['b]. *)
 
   type 'a wrapped_op =
-    | Mk : ('a, 'b) op * ('b Promise.u) -> 'a wrapped_op
-    (** ['a wrapped_op] represents an operation on the datastructure ['a
+    | Mk : ('a, 'b) op * 'b Promise.u -> 'a wrapped_op
+        (** ['a wrapped_op] represents an operation on the datastructure ['a
         t] and the continuation to run after its completion.  *)
 
   val init : unit -> 'a t

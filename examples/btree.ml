@@ -1,5 +1,5 @@
 open Obatcher
-module Btree = Ds.Btree.Make(Int)
+module Btree = Ds.Btree.Make (Int)
 module BatchedBtree = Btree.Batched
 
 let par_incr_n t pool n =
