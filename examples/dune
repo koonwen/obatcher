@@ -1,4 +1,3 @@
-(executable
- (name        example)
- (modules     example)
- (libraries   ds obatcher))
+(tests
+ (names counter skiplist btree)
+ (libraries ds obatcher))
