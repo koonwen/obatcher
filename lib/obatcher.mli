@@ -6,7 +6,8 @@ module type DS = sig
   (** [t] represents a vanilla data structure. *)
 
   type 'a op
-  (** ['a op] represents a single operation on [t] with the return type ['a]. *)
+  (** ['a op] represents a single operation on [t] with the return
+      type ['a]. *)
 
   type wrapped_op =
     | Mk : 'a op * 'a Promise.u -> wrapped_op
@@ -28,19 +29,20 @@ module type DS_Poly = sig
   (** ['a t] represents a data structure parameterised over ['a]. *)
 
   type ('a, 'b) op
-  (** [('a, 'b) op] represents a single operation on ['a t] with the return type ['b]. *)
+  (** [('a, 'b) op] represents a single operation on ['a t] with the
+      return type ['b]. *)
 
   type 'a wrapped_op =
     | Mk : ('a, 'b) op * 'b Promise.u -> 'a wrapped_op
-        (** ['a wrapped_op] represents an operation on the datastructure ['a
-        t] and the continuation to run after its completion.  *)
+    (** ['a wrapped_op] represents an operation on the datastructure
+        ['a t] and the continuation to run after its completion.  *)
 
   val init : unit -> 'a t
   (** [init ()] returns a new instance of the data structure. *)
 
   val run : 'a t -> Task.pool -> 'a wrapped_op array -> unit
-  (** [run t pool ops num] when called with a data structure ['a t], and
-      a thread pool [pool], executes all the operations in [ops],
+  (** [run t pool ops num] when called with a data structure ['a t],
+      and a thread pool [pool], executes all the operations in [ops],
       possibly using parallelism to improve the speed of the
       operation. *)
 end

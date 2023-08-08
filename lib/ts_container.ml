@@ -27,32 +27,3 @@ module ChanBased = struct
 end
 
 include ChanBased
-
-(* type container = ELT.t option array
-   type t = {
-   switching : bool Atomic.t;
-   primary : container Atomic.t;
-   mutable secondary : container;
-   size : int Atomic.t
-   }
-
-   let create ~batch_size () = {
-   switching = Atomic.make false;
-   primary = Atomic.make @@ Array.make batch_size None;
-   secondary =  Array.make batch_size None;
-   size = Atomic.make 0
-   }
-
-   let add (t : t) (elt : ELT.t) =
-   (* Make sure switching process is not happening *)
-   while Atomic.get t.switching do () done;
-   let slot = Atomic.fetch_and_add t.size 1 in
-   t.container.(slot) <- Some elt
-
-   let get t =
-   let size = Atomic.get t.size in
-   let batch = Array.make t.size None in
-   Array.blit t.container 0 batch 0 t.size;
-   batch
-
-   let size t = failwith "" *)
