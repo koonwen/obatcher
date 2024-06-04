@@ -1,5 +1,4 @@
-module Par_sort = struct
-  module T = Obatcher.Task
+module Par_sort (T : Obatcher.Sched_sig)= struct
 
   let bubble_sort_threshold = 32
 

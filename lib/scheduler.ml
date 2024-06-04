@@ -1,4 +1,4 @@
-open Kcas_data
+(* open Kcas_data *)
 
 module type S = sig
   type t
@@ -10,18 +10,15 @@ module type S = sig
   val await : t -> 'a promise -> 'a
 end
 
-module Seq = struct
-  type t = unit
-  type 'a promise = 'a resolver ref
-  type 'a resolver = 'a
+(* module Domainslib : S = struct *)
 
-  let async t f = Promise.
-end
+(*   type t = { *)
+(*     Domainslib.Task.pool *)
+(*   } *)
 
-module Domainslib = struct
-  open Domainslib.Task
+(*   let make_promise () = *)
+(*     Domainslib.Task. *)
+(*   let async t f = async t f *)
 
-  type t = pool
-
-  let async t f = async t f
-end
+(*   let *)
+(* end *)

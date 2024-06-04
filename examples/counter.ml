@@ -1,4 +1,4 @@
-open Obatcher
+open Domainslib
 module BatchedCounter = Ds.Counter.Batched
 
 let par_incr_n t pool n =
