@@ -1,11 +1,4 @@
-; (library
-;  (name obatcher)
-;  (public_name obatcher)
-;  (libraries domainslib kcas_data)
-;  (modules obatcher))
-
 (library
  (name obatcher)
  (public_name obatcher)
- (libraries domainslib)
- (modules obatcher ts_container))
+ (libraries domainslib kcas_data))

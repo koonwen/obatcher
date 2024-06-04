@@ -1,3 +1,9 @@
-(tests
- (names counter skiplist btree)
- (libraries ds obatcher))
+(executable
+ (name counter_dlib)
+ (libraries obatcher domainslib)
+ (modules counter_dlib))
+
+(executable
+ (name counter_kcas)
+ (libraries obatcher kcas_data)
+ (modules counter_kcas))
