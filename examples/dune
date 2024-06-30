@@ -1,4 +1,3 @@
-(executables
- (names counter_fifos counter_threaded counter_randos)
- (libraries obatcher unix picos.fifos picos.threaded picos.randos)
- (modules counter_fifos counter_threaded counter_randos imp_batched_counter))
+(executable
+ (name run_counter)
+ (libraries obatcher unix picos.fifos picos.threaded picos.randos))

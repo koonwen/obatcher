@@ -43,3 +43,15 @@ include Obatcher.Make (BatchedCounter)
 let incr t = apply t Incr
 let decr t = apply t Decr
 let get t = apply t Get
+
+let par_incr_n t n () =
+  let thunks = List.init n (fun _ () -> incr t) in
+  Picos_structured.Run.all thunks
+
+let par_decr_n t n () =
+  let thunks = List.init n (fun _ () -> decr t) in
+  Picos_structured.Run.all thunks
+
+let par_get_n t n () =
+  let thunks = List.init n (fun _ () -> get t |> Printf.printf "Got %d\n%!") in
+  Picos_structured.Run.all thunks
