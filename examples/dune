@@ -1,9 +1,4 @@
-(executable
- (name counter_dlib)
- (libraries obatcher domainslib)
- (modules counter_dlib))
-
-(executable
- (name counter_kcas)
- (libraries obatcher kcas_data)
- (modules counter_kcas))
+(executables
+ (names counter_fifos counter_threaded counter_randos)
+ (libraries obatcher unix picos.fifos picos.threaded picos.randos)
+ (modules counter_fifos counter_threaded counter_randos imp_batched_counter))

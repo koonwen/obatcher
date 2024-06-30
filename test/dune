@@ -1,0 +1,3 @@
+(test
+ (name bench)
+ (libraries picos.structured picos.threaded picos.randos))
