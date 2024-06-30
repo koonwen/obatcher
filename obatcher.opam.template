@@ -1,3 +1,0 @@
-pin-depends: [
-  ["domainslib.dev" "git+https://github.com/verse-lab/obatcher#master"]
-]

@@ -8,8 +8,8 @@ homepage: "https://github.com/koonwen/obatcher"
 bug-reports: "https://github.com/koonwen/obatcher/issues"
 depends: [
   "dune" {>= "3.0"}
-  "ocaml" {>= "5.0.0"}
-  "kcas_data"
+  "ocaml"
+  "picos"
   "odoc" {with-doc}
 ]
 build: [
@@ -27,6 +27,3 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/koonwen/obatcher.git"
-pin-depends: [
-  ["domainslib.dev" "git+https://github.com/verse-lab/obatcher#master"]
-]

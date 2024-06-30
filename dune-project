@@ -15,7 +15,4 @@
  (name obatcher)
  (synopsis "A Framework for building Batched Concurrent Data Structures")
  (description "")
- (depends
-  (ocaml
-   (>= 5.0.0))
-  kcas_data))
+ (depends ocaml picos))
