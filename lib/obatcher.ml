@@ -23,26 +23,23 @@ module Make (DS : DS_sig) = struct
       container = Ts_container.create ();
     }
 
-  let rec try_launch t =
-    if
-      Ts_container.size t.container > 0
-      && Atomic.compare_and_set t.running false true
-    then (
-      (* Launching *)
-      let batch = Ts_container.get t.container in
-      DS.run t.ds batch;
-      Atomic.set t.running false;
-      (* Guard against starvation *)
-      Picos.Fiber.yield ();
-      try_launch t)
-
   let apply t op =
-    let comp = Picos.Computation.create () in
+    let open Picos in
+    let comp = Computation.create () in
     let op_set = DS.Mk (op, comp) in
     Ts_container.add t.container op_set;
-    try_launch t;
-    while Picos.Computation.peek comp = None do
-      Picos.Fiber.yield ()
+    while Computation.peek comp = None do
+      if
+        Ts_container.size t.container > 0
+        && Atomic.compare_and_set t.running false true
+      then (
+        (* Batching Fiber *)
+        let batch = Ts_container.get t.container in
+        DS.run t.ds batch;
+        Atomic.set t.running false)
+      else
+        (* A batch is being processed, yield and try again later *)
+        Fiber.yield ()
     done;
-    Picos.Computation.await comp
+    Computation.await comp
 end

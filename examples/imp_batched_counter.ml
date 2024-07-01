@@ -10,26 +10,28 @@ module BatchedCounter = struct
 
   (* Internal parallelism in counter *)
   let run (t : t) (ops : wrapped_op array) =
+    Printf.printf "Number of ops in batch = %d\n" (Array.length ops);
     let start = Atomic.get t in
+    (* Probably want to implement something like a par_for *)
     let thunks =
       Array.mapi
         (fun i op ->
           match op with
           | Mk (Incr, comp) ->
               fun () ->
-                Printf.printf "running Incr slot %d\n%!" i;
+                Printf.printf "running Incr from slot %d\n%!" i;
                 Unix.sleepf 1.0;
                 Atomic.incr t;
                 Computation.return comp ()
           | Mk (Decr, comp) ->
               fun () ->
-                Printf.printf "running Decr slot %d\n%!" i;
+                Printf.printf "running Decr from slot %d\n%!" i;
                 Unix.sleepf 1.0;
                 Atomic.decr t;
                 Computation.return comp ()
           | Mk (Get, comp) ->
               fun () ->
-                Printf.printf "running Get slot %d\n%!" i;
+                Printf.printf "running Get from slot %d\n%!" i;
                 Unix.sleepf 1.0;
                 Computation.return comp start)
         ops

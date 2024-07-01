@@ -13,5 +13,24 @@ let () =
   match sched with
   | "threaded" -> Picos_threaded.run main
   | "fifos" -> Picos_fifos.run main
-  | "randos" -> Picos_randos.run main
-  | _ -> Printf.eprintf "Usage: %s <threaded | fifos | randos>" Sys.argv.(0)
+  | "randos" ->
+      let extra = Domain.recommended_domain_count () - 1 in
+      let context = Picos_randos.context () in
+      (* Spawn multiple domains with multiple threads each for this
+         scheduler *)
+      let spawn_ndoms_with_nthreads nd nt =
+        for _ = 1 to nd do
+          Domain.spawn (fun () ->
+              for _ = 1 to nt do
+                Thread.create Picos_randos.runner_on_this_thread context
+                |> ignore
+              done;
+              Picos_randos.runner_on_this_thread context)
+          |> ignore
+        done
+      in
+      spawn_ndoms_with_nthreads extra extra;
+      Printf.printf "Spawning %d domains with extra %d threads per domain\n%!"
+        extra extra;
+      Picos_randos.run ~context main
+  | _ -> Printf.eprintf "Usage: %s <threaded | fifos | randos>\n" Sys.argv.(0)
