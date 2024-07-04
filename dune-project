@@ -11,6 +11,8 @@
 
 (maintainers "Lee Koon Wen")
 
+(documentation https://github.com/koonwen/obatcher/)
+
 (package
  (name obatcher)
  (synopsis "A Framework for building Batched Concurrent Data Structures")
