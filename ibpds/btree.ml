@@ -161,7 +161,6 @@
 (*       x.min_child_capacity <- min x.min_child_capacity (min y.min_child_capacity z.min_child_capacity); *)
 (*       x.capacity <- (2 * t - 1 - x.n) * (x.min_child_capacity + 1) + x.min_child_capacity *)
 
-
 (*     let rec insert_node ~max_children x k vl = *)
 (*       let index = *)
 (*         find_int_range_dec ~start:(x.n - 1) ~stop:0 (fun i -> *)
@@ -536,8 +535,6 @@
 (*         Par_sort.sort pool ~compare:(fun (k, _) (k', _) -> V.compare k k') keys; *)
 (*         (\* allocate a buffer for the results *\) *)
 (*         par_search_node ?par_threshold ?threshold pool t.root ~height:t.height ~keys ~range:(0, Array.length keys) *)
-
-
 
 (*       let rec par_insert_node ?(threshold=8) ~pool ~max_children (t: 'a Sequential.node) (batch: (V.t * 'a) array) start stop = *)
 (*         if stop <= start *)

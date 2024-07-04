@@ -9,7 +9,7 @@ bug-reports: "https://github.com/koonwen/obatcher/issues"
 depends: [
   "dune" {>= "3.0"}
   "ocaml"
-  "picos"
+  "picos" {>= "0.4.0"}
   "odoc" {with-doc}
 ]
 build: [
