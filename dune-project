@@ -18,6 +18,6 @@
  (synopsis "A Framework for building Batched Concurrent Data Structures")
  (description "")
  (depends
-  ocaml
+  (ocaml (>= 5.0.0))
   (picos
    (>= 0.4.0))))
