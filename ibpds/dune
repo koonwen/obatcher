@@ -1,6 +1,13 @@
-; (library
-;  (wrapped false)
-;  (name ibpds)
-;  (public_name obatcher.ibpds)
-;  (libraries picos)
-;  (synopsis "Implicitly Batched, Para-concurrent Data Structures"))
+(library
+ (name ibpds)
+ (public_name obatcher.ibpds)
+ (libraries picos picos.structured picos.threaded ) ;Should remove
+                                                    ;picos.threaded
+                                                    ;later
+ (synopsis "Implicitly Batched, Para-concurrent Data Structures")
+(modules btree skiplist))
+
+(executable
+ (name utils)
+ (libraries picos picos.structured picos.threaded)
+ (modules utils))

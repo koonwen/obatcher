@@ -1,165 +1,165 @@
 (* open Obatcher *)
-(* module Make (V : Stdlib.Map.OrderedType) = struct *)
+module Make (V : Stdlib.Map.OrderedType) = struct
 
-(*   module Sequential = struct *)
+  module Sequential = struct
 
-(*     type t = { *)
-(*       hdr : node; *)
-(*       level : int ref; *)
-(*       maxlevel : int; *)
-(*       nil : node *)
-(*     } *)
-(*     and node = Hd of node array | Node of data | Null *)
-(*     and data = {mutable value : V.t; forward : node array} *)
+    type t = {
+      hdr : node;
+      level : int ref;
+      maxlevel : int;
+      nil : node
+    }
+    and node = Hd of node array | Node of data | Null
+    and data = {mutable value : V.t; forward : node array}
 
-(*     let show to_string = function *)
-(*       | Hd _ -> "Hd" *)
-(*       | Node {value; _} -> Printf.sprintf "Node(%s)" (to_string value) *)
-(*       | Null -> "Null" *)
+    let show to_string = function
+      | Hd _ -> "Hd"
+      | Node {value; _} -> Printf.sprintf "Node(%s)" (to_string value)
+      | Null -> "Null"
 
-(*     let[@warning "-32"] to_string to_string = function *)
-(*       | Hd forward -> "Hd -> [|" ^(Array.fold_right (fun node acc -> acc ^ "; " ^ (show to_string node)) forward "")^"|]" *)
-(*       | Node {forward;_} as n -> *)
-(*         (show to_string n)^"-> [|"^ *)
-(*         (Array.fold_right (fun node acc -> acc ^ "; " ^ (show to_string node)) forward "") *)
-(*         ^"|]" *)
-(*       | Null -> "Null" *)
+    let[@warning "-32"] to_string to_string = function
+      | Hd forward -> "Hd -> [|" ^(Array.fold_right (fun node acc -> acc ^ "; " ^ (show to_string node)) forward "")^"|]"
+      | Node {forward;_} as n ->
+        (show to_string n)^"-> [|"^
+        (Array.fold_right (fun node acc -> acc ^ "; " ^ (show to_string node)) forward "")
+        ^"|]"
+      | Null -> "Null"
 
-(*     let ( !> ) = function *)
-(*       | Null -> failwith "[!>] Tried to dereference Null" *)
-(*       | Hd forward | Node {forward; _} -> forward *)
+    let ( !> ) = function
+      | Null -> failwith "[!>] Tried to dereference Null"
+      | Hd forward | Node {forward; _} -> forward
 
-(*     let ( !^ ) = function *)
-(*       | Null -> failwith "[!^] Tried to dereference Null" *)
-(*       | Hd _ -> failwith "[!^] Tried to dereference Hdr" *)
-(*       | Node r -> r *)
+    let ( !^ ) = function
+      | Null -> failwith "[!^] Tried to dereference Null"
+      | Hd _ -> failwith "[!^] Tried to dereference Hdr"
+      | Node r -> r
 
-(*     let ( *= ) v1 v2 = V.compare v1 v2 = 0 *)
-(*     let ( *< ) v1 v2 = V.compare v1 v2 = -1 *)
+    let ( *= ) v1 v2 = V.compare v1 v2 = 0
+    let ( *< ) v1 v2 = V.compare v1 v2 = -1
 
-(*     let compare n1 n2 = *)
-(*       match n1, n2 with *)
-(*       | Null, Null -> assert(n1 == n2); 0 *)
-(*       | _, Null -> -1 *)
-(*       | Null, _ -> 1 *)
-(*       | Hd r1, Hd r2 -> assert(r1 == r2); 0 *)
-(*       | Hd _, _ -> -1 *)
-(*       | _, Hd _ -> 1 *)
-(*       | Node d1, Node d2 -> V.compare (d1.value) (d2.value) *)
+    let compare n1 n2 =
+      match n1, n2 with
+      | Null, Null -> assert(n1 == n2); 0
+      | _, Null -> -1
+      | Null, _ -> 1
+      | Hd r1, Hd r2 -> assert(r1 == r2); 0
+      | Hd _, _ -> -1
+      | _, Hd _ -> 1
+      | Node d1, Node d2 -> V.compare (d1.value) (d2.value)
 
-(*     let rec log2 n = *)
-(*       if n <= 1 then 0 else 1 + (log2 (n asr 1)) *)
+    let rec log2 n =
+      if n <= 1 then 0 else 1 + (log2 (n asr 1))
 
-(*     let init ~size () = *)
-(*       let maxlevel = log2 size in *)
-(*       let nil = Null in *)
-(*       { hdr = Hd (Array.make (maxlevel+1) nil); level = ref 0; maxlevel; nil} *)
+    let init ~size () =
+      let maxlevel = log2 size in
+      let nil = Null in
+      { hdr = Hd (Array.make (maxlevel+1) nil); level = ref 0; maxlevel; nil}
 
-(*     let random_level t = *)
-(*       let lvl = ref 0 in *)
-(*       while (Random.float 1.) < 0.5 && !lvl < t.maxlevel do *)
-(*         incr lvl *)
-(*       done; *)
-(*       !lvl *)
+    let random_level t =
+      let lvl = ref 0 in
+      while (Random.float 1.) < 0.5 && !lvl < t.maxlevel do
+        incr lvl
+      done;
+      !lvl
 
-(*     let make_node t lvl value = Node { value; forward = Array.make (lvl + 1) t.nil} *)
+    let make_node t lvl value = Node { value; forward = Array.make (lvl + 1) t.nil}
 
-(*     let mem t elt = *)
-(*       let x = ref t.hdr in *)
-(*       for i = !(t.level) downto 0 do *)
-(*         while *)
-(*           match (!>(!x)).(i) with *)
-(*           | Null | Hd _ -> false *)
-(*           | Node {value ; _} -> value *< elt *)
-(*         do *)
-(*           x := (!>(!x)).(i) *)
-(*         done *)
-(*       done; *)
-(*       x := !>(!x).(0); *)
-(*       match !x with *)
-(*       | Null | Hd _ -> false *)
-(*       | Node {value; _} -> value *= elt *)
+    let mem t elt =
+      let x = ref t.hdr in
+      for i = !(t.level) downto 0 do
+        while
+          match (!>(!x)).(i) with
+          | Null | Hd _ -> false
+          | Node {value ; _} -> value *< elt
+        do
+          x := (!>(!x)).(i)
+        done
+      done;
+      x := !>(!x).(0);
+      match !x with
+      | Null | Hd _ -> false
+      | Node {value; _} -> value *= elt
 
-(*     let insert t elt = *)
-(*       (\* Search for Node *\) *)
-(*       let update = Array.make (t.maxlevel + 1) t.nil in *)
-(*       let x = ref t.hdr in *)
-(*       for i = !(t.level) downto 0 do *)
-(*         while *)
-(*           match (!>(!x)).(i) with *)
-(*           | Null | Hd _ -> false *)
-(*           | Node {value ; _} -> value *< elt *)
-(*         do *)
-(*           x := !>(!x).(i) *)
-(*         done; *)
-(*         update.(i) <- !x *)
-(*       done; *)
-(*       let x = !>(!x).(0) in *)
-(*       (\* Check if we are at the correct point *\) *)
-(*       if *)
-(*         match x with *)
-(*         | Null | Hd _ -> false *)
-(*         | Node {value; _} -> value *= elt *)
-(*       then (!^x).value <- elt *)
-(*       else *)
-(*         let lvl = random_level t in *)
-(*         if lvl > !(t.level) then ( *)
-(*           for i = !(t.level) + 1 to lvl do *)
-(*             update.(i) <- t.hdr *)
-(*           done; *)
-(*           t.level := lvl); *)
-(*         let x = make_node t lvl elt in *)
-(*         for i = 0 to lvl do *)
-(*           !>x.(i) <- !>(update.(i)).(i); *)
-(*           !>(update.(i)).(i) <- x *)
-(*         done *)
+    let insert t elt =
+      (* Search for Node *)
+      let update = Array.make (t.maxlevel + 1) t.nil in
+      let x = ref t.hdr in
+      for i = !(t.level) downto 0 do
+        while
+          match (!>(!x)).(i) with
+          | Null | Hd _ -> false
+          | Node {value ; _} -> value *< elt
+        do
+          x := !>(!x).(i)
+        done;
+        update.(i) <- !x
+      done;
+      let x = !>(!x).(0) in
+      (* Check if we are at the correct point *)
+      if
+        match x with
+        | Null | Hd _ -> false
+        | Node {value; _} -> value *= elt
+      then (!^x).value <- elt
+      else
+        let lvl = random_level t in
+        if lvl > !(t.level) then (
+          for i = !(t.level) + 1 to lvl do
+            update.(i) <- t.hdr
+          done;
+          t.level := lvl);
+        let x = make_node t lvl elt in
+        for i = 0 to lvl do
+          !>x.(i) <- !>(update.(i)).(i);
+          !>(update.(i)).(i) <- x
+        done
 
-(*     let size t = *)
-(*       let rec aux acc = function *)
-(*         | Null -> acc *)
-(*         | Hd forward -> *)
-(*           aux acc forward.(0) *)
-(*         | Node {forward; _} -> *)
-(*           aux (acc+1) forward.(0) *)
-(*       in *)
-(*       aux 0 t.hdr *)
+    let size t =
+      let rec aux acc = function
+        | Null -> acc
+        | Hd forward ->
+          aux acc forward.(0)
+        | Node {forward; _} ->
+          aux (acc+1) forward.(0)
+      in
+      aux 0 t.hdr
 
-(*     (\* Does not work on empty lists *\) *)
-(*     let validate ?(to_string=fun _ -> "<opaque>") t = *)
-(*       let rec walk prev = function *)
-(*         | Null -> () *)
-(*         | Hd forward -> walk prev forward.(0) *)
-(*         | Node {value; forward; _} -> *)
-(*           let vals = value |> to_string in *)
-(*           let prevs = prev |> to_string in *)
-(*           (if value < prev then Printf.printf "Ordering error %s -> %s\n" vals prevs *)
-(*            else if value = prev then Printf.printf "Duplicate error %s -> %s\n" vals prevs); *)
-(*           walk value forward.(0) *)
-(*       in *)
-(*       let starting_point =  !>(t.hdr).(0) in *)
-(*       let first_val = !^starting_point.value in *)
-(*       walk first_val !>starting_point.(0) *)
+    (* Does not work on empty lists *)
+    let validate ?(to_string=fun _ -> "<opaque>") t =
+      let rec walk prev = function
+        | Null -> ()
+        | Hd forward -> walk prev forward.(0)
+        | Node {value; forward; _} ->
+          let vals = value |> to_string in
+          let prevs = prev |> to_string in
+          (if value < prev then Printf.printf "Ordering error %s -> %s\n" vals prevs
+           else if value = prev then Printf.printf "Duplicate error %s -> %s\n" vals prevs);
+          walk value forward.(0)
+      in
+      let starting_point =  !>(t.hdr).(0) in
+      let first_val = !^starting_point.value in
+      walk first_val !>starting_point.(0)
 
-(*     let print_slist t to_string = *)
-(*       let print_level t lvl = *)
-(*         let rec aux = function *)
-(*           | Null -> print_endline "Null" *)
-(*           | Hd forward -> *)
-(*             Printf.printf "Level %d : Hd -> " lvl; *)
-(*             aux forward.(lvl) *)
-(*           | Node {value; forward; _} -> *)
-(*             let val_str = to_string value in *)
-(*             Printf.printf "(%s) -> " val_str; *)
-(*             aux forward.(lvl) *)
-(*         in *)
-(*         aux t.hdr *)
-(*       in *)
-(*       for lvl = !(t.level) downto 0 do *)
-(*         print_level t lvl; *)
-(*         Printf.printf "\n" *)
-(*       done *)
+    let print_slist t to_string =
+      let print_level t lvl =
+        let rec aux = function
+          | Null -> print_endline "Null"
+          | Hd forward ->
+            Printf.printf "Level %d : Hd -> " lvl;
+            aux forward.(lvl)
+          | Node {value; forward; _} ->
+            let val_str = to_string value in
+            Printf.printf "(%s) -> " val_str;
+            aux forward.(lvl)
+        in
+        aux t.hdr
+      in
+      for lvl = !(t.level) downto 0 do
+        print_level t lvl;
+        Printf.printf "\n"
+      done
 
-(*   end *)
+  end
 
 (*   module Batched = struct *)
 (*     module S = struct *)
@@ -359,4 +359,4 @@
 
 (*   end *)
 
-(* end *)
+end

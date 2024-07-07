@@ -27,7 +27,10 @@ must service many small IO requests. In such cases, the IO bandwidth
 of the system ends up being under-utilized with many wasted cycles
 because of the latency for each request. Waiting to collect a batch of
 requests to send at one shot effectively amortizes the cost of
-performing each singular request.
+performing each singular request. [Nagles's
+algorithm](https://en.wikipedia.org/wiki/Nagle%27s_algorithm) which is
+implemented in efficient TCP/IP networks is another use case of
+batching to improve overall throughput.
 
 Batch-processing has recently found it's way into other use cases.
 The new asynchronous interface in Linux - **io-uring** uses
@@ -113,7 +116,7 @@ Array, etc...
 ``` ocaml
 type ds
 type op
-val run : ds -> Task.pool -> op array -> unit
+val run : ds -> sched_ctx -> op array -> unit
 ```
 
 is the application of **Batch-parallelism** which is driven by
@@ -123,16 +126,3 @@ the idea that
 
 [paper]((https://dl.acm.org/doi/10.1145/2555243.2555284)** which is a
 novel)
-
-implement new design approach for thread-safe data structures. The
-principle behind it being that it is easier to
-
-In the design space of Concurrent data
-structures (Data structures which are thread safe)
-
-
-It leverages `Promises` provided by [Eio](https://github.com/ocaml-multicore/eio)
-
-## Why
-
-## How

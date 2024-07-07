@@ -1,16 +1,11 @@
 (lang dune 3.0)
 
 (name obatcher)
-
 (generate_opam_files)
-
 (source
  (github koonwen/obatcher))
-
-(authors "Lee Koon Wen" "Kiran Gopinathan")
-
+(authors "Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling")
 (maintainers "Lee Koon Wen")
-
 (documentation https://github.com/koonwen/obatcher/)
 
 (package

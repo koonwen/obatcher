@@ -3,7 +3,7 @@ opam-version: "2.0"
 synopsis: "A Framework for building Batched Concurrent Data Structures"
 description: ""
 maintainer: ["Lee Koon Wen"]
-authors: ["Lee Koon Wen" "Kiran Gopinathan"]
+authors: ["Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling"]
 homepage: "https://github.com/koonwen/obatcher"
 doc: "https://github.com/koonwen/obatcher/"
 bug-reports: "https://github.com/koonwen/obatcher/issues"
