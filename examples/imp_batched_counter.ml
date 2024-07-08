@@ -36,7 +36,7 @@ module BatchedCounter = struct
   type wrapped_op = Mk : 'a op * 'a Computation.t -> wrapped_op
 
   (* Internal parallelism in counter *)
-  let run (t : t) (ops : wrapped_op array) =
+  let _run_1 (t : t) (ops : wrapped_op array) =
     Printf.printf "Number of ops in batch = %d\n" (Array.length ops);
     let start = Atomic.get t in
     (* Probably want to implement something like a par_for *)
@@ -65,7 +65,7 @@ module BatchedCounter = struct
     in
     Picos_structured.Run.all (thunks |> Array.to_list)
 
-  let run (t : t) (ops : wrapped_op array) =
+  let run_2 (t : t) (ops : wrapped_op array) =
     let len = Array.length ops in
     let start = Atomic.get t in
     let add_n =
@@ -86,6 +86,8 @@ module BatchedCounter = struct
         ( + ) 0
     in
     Atomic.set t (start + add_n)
+
+  let run = run_2
 end
 
 (* Set up implicit batching *)

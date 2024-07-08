@@ -7,7 +7,7 @@
  (synopsis "Implicitly Batched, Para-concurrent Data Structures")
 (modules btree skiplist))
 
-(executable
+(library
  (name utils)
  (libraries picos picos.structured picos.threaded)
  (modules utils))
