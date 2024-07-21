@@ -1,0 +1,8 @@
+(library
+ (name batched)
+ (public_name obatcher.batched)
+ (libraries picos picos.structured obatcher batteries)
+ ;Should remove
+ ;picos.threaded
+ ;later
+ (synopsis "Batched Data Structures"))

@@ -68,7 +68,7 @@ module BatchedCounter = struct
   let run_2 (t : t) (ops : wrapped_op array) =
     let len = Array.length ops in
     let start = Atomic.get t in
-    let add_n =
+    let delta =
       parallel_for_reduce
         ~n_fibers:(Domain.recommended_domain_count () - 1)
         ~start:0 ~finish:(len - 1)
@@ -85,7 +85,7 @@ module BatchedCounter = struct
               0)
         ( + ) 0
     in
-    Atomic.set t (start + add_n)
+    Atomic.set t (start + delta)
 
   let run = run_2
 end
@@ -96,15 +96,3 @@ include Obatcher.Make (BatchedCounter)
 let incr t = apply t Incr
 let decr t = apply t Decr
 let get t = apply t Get
-
-let par_incr_n t n () =
-  let thunks = List.init n (fun _ () -> incr t) in
-  Picos_structured.Run.all thunks
-
-let par_decr_n t n () =
-  let thunks = List.init n (fun _ () -> decr t) in
-  Picos_structured.Run.all thunks
-
-let par_get_n t n () =
-  let thunks = List.init n (fun _ () -> get t |> Printf.printf "Got %d\n%!") in
-  Picos_structured.Run.all thunks

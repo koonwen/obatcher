@@ -28,6 +28,7 @@ module Make (DS : DS_sig) = struct
     let comp = Computation.create () in
     let op_set = DS.Mk (op, comp) in
     Ts_container.add t.container op_set;
+    (* Try launching batch *)
     while Computation.peek comp = None do
       if
         Ts_container.size t.container > 0

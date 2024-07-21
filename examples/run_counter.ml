@@ -1,10 +1,24 @@
+module Counter = Imp_batched_counter
+
+let n_fiber_incr t n () =
+  let thunks = List.init n (fun _ () -> Counter.incr t) in
+  Picos_structured.Run.all thunks
+
+let n_fiber_decr t n () =
+  let thunks = List.init n (fun _ () -> Counter.decr t) in
+  Picos_structured.Run.all thunks
+
+let n_fiber_get t n () =
+  let thunks = List.init n (fun _ () -> Counter.get t |> Printf.printf "Got %d\n%!") in
+  Picos_structured.Run.all thunks
+
 let main () =
-  let counter = Imp_batched_counter.init ~ctx:() in
+  let counter = Counter.init ~ctx:() in
   Picos_structured.Run.all
     [
-      Imp_batched_counter.par_incr_n counter 100;
-      Imp_batched_counter.par_decr_n counter 100;
-      Imp_batched_counter.par_get_n counter 100;
+      n_fiber_incr counter 1_000_000;
+      n_fiber_decr counter 1_000_000;
+      n_fiber_get counter 1_000_000;
     ]
 
 let () =
