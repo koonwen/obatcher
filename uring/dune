@@ -8,6 +8,7 @@
  (libraries
   batched_uring
   cmdliner
+  logs.threaded
   logs.fmt
   logs.cli
   fmt.cli
