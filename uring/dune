@@ -1,0 +1,18 @@
+(library
+ (name batched_uring)
+ (libraries uring obatcher picos logs)
+ (modules batched_uring))
+
+(executable
+ (name burcp)
+ (libraries
+  batched_uring
+  cmdliner
+  logs.fmt
+  logs.cli
+  fmt.cli
+  fmt.tty
+  picos.threaded
+  picos.fifos
+  picos.randos)
+ (modules burcp))

@@ -1,3 +1,0 @@
-(executable
- (name ib_uring)
- (libraries uring obatcher picos picos.threaded picos.fifos))
