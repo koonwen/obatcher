@@ -1,4 +1,4 @@
-(* Flat-combining hashtable *)
+(* Flat-combining hashtable, with no fancy internal parallelism *)
 
 open Picos
 
