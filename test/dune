@@ -1,3 +1,11 @@
-(test
- (name bench)
- (libraries picos.structured picos.threaded picos.randos))
+(tests
+ (names test_skiplist)
+ (libraries
+  picos.structured
+  picos.threaded
+  picos.fifos
+  picos.randos
+  obatcher.ds
+  containers
+  qcheck
+  qcheck-alcotest))
