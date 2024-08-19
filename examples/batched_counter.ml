@@ -1,5 +1,6 @@
 open Picos
 
+(* Higher level concurrency primatives implemented on top of Picos *)
 let parallel_for_reduce ?(n_fibers = 1) ~start ~finish ~body reduce_fn init =
   let chunk_size =
     let sz = (finish - start + 1) / n_fibers in
@@ -27,7 +28,7 @@ let parallel_for_reduce ?(n_fibers = 1) ~start ~finish ~body reduce_fn init =
       (Picos_structured.Bundle.join_after (fun bundle ->
            work bundle start finish))
 
-module BatchedCounter = struct
+module Batched = struct
   type t = int Atomic.t
 
   let init ~ctx:_ = Atomic.make 0
@@ -35,38 +36,9 @@ module BatchedCounter = struct
   type _ op = Incr : unit op | Decr : unit op | Get : int op
   type wrapped_op = Mk : 'a op * 'a Computation.t -> wrapped_op
 
-  (* Internal parallelism in counter *)
-  let _run_1 (t : t) (ops : wrapped_op array) =
-    Printf.printf "Number of ops in batch = %d\n" (Array.length ops);
-    let start = Atomic.get t in
-    (* Probably want to implement something like a par_for *)
-    let thunks =
-      Array.mapi
-        (fun i op ->
-          match op with
-          | Mk (Incr, comp) ->
-              fun () ->
-                Printf.printf "running Incr from slot %d\n%!" i;
-                Unix.sleepf 1.0;
-                Atomic.incr t;
-                Computation.return comp ()
-          | Mk (Decr, comp) ->
-              fun () ->
-                Printf.printf "running Decr from slot %d\n%!" i;
-                Unix.sleepf 1.0;
-                Atomic.decr t;
-                Computation.return comp ()
-          | Mk (Get, comp) ->
-              fun () ->
-                Printf.printf "running Get from slot %d\n%!" i;
-                Unix.sleepf 1.0;
-                Computation.return comp start)
-        ops
-    in
-    Picos_structured.Run.all (thunks |> Array.to_list)
-
-  let run_2 (t : t) (ops : wrapped_op array) =
+  let run (t : t) (ops : wrapped_op array) =
     let len = Array.length ops in
+    Logs.info (fun m -> m "Processing batch of %d operations" len);
     let start = Atomic.get t in
     let delta =
       parallel_for_reduce
@@ -86,13 +58,23 @@ module BatchedCounter = struct
         ( + ) 0
     in
     Atomic.set t (start + delta)
-
-  let run = run_2
 end
 
 (* Set up implicit batching *)
-include Obatcher.Make (BatchedCounter)
+include Obatcher.Make (Batched)
 
-let incr t = apply t Incr
-let decr t = apply t Decr
-let get t = apply t Get
+let incr t =
+  Logs.debug (fun m -> m "Incr requested");
+  apply t Incr;
+  Logs.debug (fun m -> m "Incr completed")
+
+let decr t =
+  Logs.debug (fun m -> m "Decr requested");
+  apply t Decr;
+  Logs.debug (fun m -> m "Decr completed")
+
+let get t =
+  Logs.debug (fun m -> m "Got requested");
+  let got = apply t Get in
+  Logs.debug (fun m -> m "Got completed with %d" got);
+  got
