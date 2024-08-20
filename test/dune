@@ -1,10 +1,11 @@
 (tests
- (names test_skiplist)
+ (names test_skiplist test_obatcher)
  (libraries
   picos.structured
   picos.threaded
   picos.fifos
   picos.randos
+  obatcher
   obatcher.ds
   containers
   qcheck
