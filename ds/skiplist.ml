@@ -162,6 +162,7 @@ module Make (V : Stdlib.Map.OrderedType) = struct
 
   module Batched = struct
     type t = Sequential.t
+    type cfg = { size : int }
 
     type 'a op =
       | Insert : V.t -> unit op
@@ -170,7 +171,8 @@ module Make (V : Stdlib.Map.OrderedType) = struct
 
     type wrapped_op = Mk : 'a op * 'a Picos.Computation.t -> wrapped_op
 
-    let init ~ctx:_ = Sequential.init ~size:(Int.shift_left 1 30 - 1) ()
+    let init ?(cfg = { size = Int.shift_left 1 30 - 1 }) () =
+      Sequential.init ~size:cfg.size ()
 
     type intermediate = {
       batch_size : int;
@@ -370,8 +372,7 @@ module Make (V : Stdlib.Map.OrderedType) = struct
 
   include Obatcher.Make (Batched)
 
-  let insert t v = apply t (Batched.Insert v)
-  let mem t v = apply t (Batched.Member v)
-  let sz t = apply t (Batched.Size)
-
+  let insert t v = exec t (Batched.Insert v)
+  let mem t v = exec t (Batched.Member v)
+  let sz t = exec t Batched.Size
 end

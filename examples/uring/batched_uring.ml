@@ -1,8 +1,7 @@
 open Uring
 
-(* This backend is designed for use in a parallel setting since the
-   batches start eagerly. This will be no benefit to a single threaded
-   scheduler in terms of batching requests *)
+(* This backend submits requests eagerly but batches other requests
+   that are waiting on completion of an earlier batch of requests *)
 module Backend = struct
   type _ op =
     | Statx : (Unix.file_descr * Statx.Mask.t * Statx.t) -> int op
@@ -10,6 +9,15 @@ module Backend = struct
     | Write : (int * Unix.file_descr * Cstruct.t) -> int op
 
   type uid = int
+  type wrapped_op = Mk : 'a op * 'a Picos.Computation.t -> wrapped_op
+
+  type t = {
+    ring : int Uring.t;
+    pending : (uid, wrapped_op) Hashtbl.t;
+    scheduled_retry : bool Atomic.t;
+  }
+
+  type cfg = { queue_depth : int }
 
   let get_uid =
     let cnt = ref 0 in
@@ -18,13 +26,12 @@ module Backend = struct
       incr cnt;
       id
 
-  type wrapped_op = Mk : 'a op * 'a Picos.Computation.t -> wrapped_op
-
-  type t = {
-    ring : int Uring.t;
-    pending : (uid, wrapped_op) Hashtbl.t;
-    scheduled_retry : bool Atomic.t;
-  }
+  let init ?(cfg = { queue_depth = 64 }) () =
+    {
+      ring = create ~queue_depth:cfg.queue_depth ();
+      pending = Hashtbl.create 128;
+      scheduled_retry = Atomic.make false;
+    }
 
   (* Check and fill completions and schedule another fiber later to
      run this again if there are still pending completions *)
@@ -35,13 +42,13 @@ module Backend = struct
       | Some { result; data = uid } ->
           (match Hashtbl.find t.pending uid with
           | Mk (Read _, comp) ->
-              Logs.info (fun m -> m "Read completion found");
+              Logs.debug (fun m -> m "Read completion found");
               Picos.Computation.return comp result
           | Mk (Write _, comp) ->
-              Logs.info (fun m -> m "Write completion found");
+              Logs.debug (fun m -> m "Write completion found");
               Picos.Computation.return comp result
           | Mk (Statx _, comp) ->
-              Logs.info (fun m -> m "Statx completion found");
+              Logs.debug (fun m -> m "Statx completion found");
               Picos.Computation.return comp result);
           Hashtbl.remove t.pending uid
     done
@@ -69,27 +76,18 @@ module Backend = struct
     let submitted = Uring.submit t.ring in
     Logs.info (fun m -> m "Submitting %d requests as batch" submitted);
     check_completions t
-
-  let init ~ctx:_ =
-    {
-      ring = create ~queue_depth:64 ();
-      pending = Hashtbl.create 128;
-      scheduled_retry = Atomic.make false;
-    }
 end
 
-open Obatcher.Make (Backend)
-
-let init () = init ~ctx:()
+include Obatcher.Make (Backend)
 
 let read t file_offset fd buf =
-  Logs.info (fun m -> m "Requesting read");
-  apply t (Read (file_offset, fd, buf))
+  Logs.debug (fun m -> m "Requesting read");
+  exec t (Read (file_offset, fd, buf))
 
 let write t file_offset fd buf =
-  Logs.info (fun m -> m "Requesting write");
-  apply t (Write (file_offset, fd, buf))
+  Logs.debug (fun m -> m "Requesting write");
+  exec t (Write (file_offset, fd, buf))
 
 let statx t fd mask buf =
-  Logs.info (fun m -> m "Requesting statx");
-  apply t (Statx (fd, mask, buf))
+  Logs.debug (fun m -> m "Requesting statx");
+  exec t (Statx (fd, mask, buf))

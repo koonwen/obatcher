@@ -15,4 +15,5 @@
  (depends
   (ocaml (>= 5.0.0))
   (picos
-   (>= 0.4.0))))
+   (>= 0.4.0))
+  (alcotest :with-test)))
