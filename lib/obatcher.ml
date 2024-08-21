@@ -11,14 +11,14 @@ end
 module Make (S : Service) = struct
 
   type t = {
-    mutable ds : S.t;
+    mutable internal : S.t;
     running : bool Atomic.t;
     container : S.wrapped_op Ts_container.t;
   }
 
   let init ?cfg () =
     {
-      ds = S.init ?cfg ();
+      internal = S.init ?cfg ();
       running = Atomic.make false;
       container = Ts_container.create ();
     }
@@ -36,11 +36,13 @@ module Make (S : Service) = struct
       then (
         (* Batching Fiber *)
         let batch = Ts_container.get t.container in
-        S.run t.ds batch;
+        S.run t.internal batch;
         Atomic.set t.running false)
       else
         (* A batch is being processed, yield and try again later *)
         Fiber.yield ()
     done;
     Computation.await comp
+
+  let get_internal t = t.internal
 end

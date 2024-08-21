@@ -46,4 +46,8 @@ module Make : functor (S : Service) -> sig
   (** [exec t op] is the API call for a singular operation on the
       service with operations being automatically batched before
       passed to the service *)
+
+  val get_internal : t -> S.t
+  [@@alert unsafe "Should not be used typically by application"]
+  (** [get_internal t] extracts underlying internal service *)
 end
