@@ -9,7 +9,6 @@ module type Service = sig
 end
 
 module Make (S : Service) = struct
-
   type t = {
     mutable internal : S.t;
     running : bool Atomic.t;
@@ -23,6 +22,9 @@ module Make (S : Service) = struct
       container = Ts_container.create ();
     }
 
+  (* TODO: This currently does busy polling by rescheduling threads
+     the run at a later time, ideally we should just do something like
+     a backoff wait instead *)
   let exec t op =
     let open Picos in
     let comp = Computation.create () in
