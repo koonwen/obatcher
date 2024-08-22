@@ -1,12 +1,15 @@
 (tests
- (names test_skiplist test_obatcher)
+ (names test_skiplist test_obatcher bug)
  (libraries
+  logs
+  logs.fmt
+  logs.threaded
+  containers
   picos.structured
   picos.threaded
   picos.fifos
   picos.randos
   obatcher
   obatcher.ds
-  containers
   qcheck
   qcheck-alcotest))

@@ -2,6 +2,28 @@
 
 open QCheck2
 
+(** Add this module just to get a fiber uid easily *)
+module Picos_fiber : sig
+  type t = int
+
+  val get_id : unit -> t
+  (** [get_id ()] returns a unique integer id for the current fiber. *)
+
+  val reset_id_counter : unit -> unit
+  (** [reset_id_counter] resets id generator. Only call this in a
+      sequential part of a program *)
+end = struct
+  type t = int
+
+  let next = Atomic.make 0
+
+  let fiber_id_key =
+    Picos.Fiber.FLS.new_key @@ Computed (fun () -> Atomic.fetch_and_add next 1)
+
+  let get_id () = Picos.Fiber.FLS.get (Picos.Fiber.current ()) fiber_id_key
+  let reset_id_counter () = Atomic.set next 0
+end
+
 module Mock_Service_Internal = struct
   type t = int array Queue.t
   (* Collect all batches
@@ -13,19 +35,53 @@ module Mock_Service_Internal = struct
   type wrapped_op = Mk : 'a op * 'a Picos.Computation.t -> wrapped_op
 
   let init ?cfg:_ () = Queue.create ()
+  let pp_wrop ppf = function Mk (Req rid, _) -> Fmt.pf ppf "Req %i" rid
+  let pp_ops = Fmt.(array ~sep:semi pp_wrop)
 
   let run t ops =
+    Logs.info (fun m -> m "Domain %d is the batcher%!" (Domain.self () :> int));
+    Logs.debug (fun m -> m "Batch of [%a]%!" pp_ops ops);
+    (* Unix.sleepf 0.1; *)
     let ids =
       Array.map
         (function
-          | Mk (Req id, comp) ->
+          | Mk (Req rid, comp) ->
               Picos.Computation.return comp ();
-              id)
+              rid)
         ops
     in
-    Queue.add ids t
+    Queue.add ids t;
+    Logs.debug (fun m -> m "Batch processing complete%!")
 
   let get_batches (t : t) = Queue.to_seq t |> Array.of_seq
+
+  let batch_stats (t : t) =
+    let batches = get_batches t in
+    let batch_sizes = Array.map (fun a -> Array.length a) batches in
+    let tbl = Hashtbl.create (Queue.length t) in
+    Array.iter
+      (fun key ->
+        match Hashtbl.find_opt tbl key with
+        | None -> Hashtbl.add tbl key 0
+        | Some v -> Hashtbl.replace tbl key (v + 1))
+      batch_sizes;
+    let stats = Hashtbl.to_seq tbl |> Array.of_seq in
+    Array.sort (fun (k1, _) (k2, _) -> Int.compare k1 k2) stats;
+    stats
+
+  let pp_stats = Fmt.(array ~sep:semi (pair int int))
+
+  let print_stats_as_hist stats =
+    let print_bar key counts = Fmt.pr "%d |%s\n" key (String.make counts '@') in
+    let hi = stats.(Array.length stats - 1) |> fst in
+    let idx = ref 0 in
+    for i = 1 to hi do
+      let k, v = stats.(!idx) in
+      if k = i then (
+        print_bar k v;
+        incr idx)
+      else print_bar i 0
+    done
 end
 
 module Mock_Service = Obatcher.Make (Mock_Service_Internal)
@@ -43,11 +99,17 @@ let show_scheduler = function
 
 (* Iteratively submit n req operations *)
 let submit_n_reqs t n =
+  let did = (Domain.self () :> int) in
+  let fid = Picos_fiber.get_id () in
   for i = 1 to n do
-    Mock_Service.exec t (Mock_Service_Internal.Req i)
+    Logs.app (fun m ->
+        m "Submitting Req %d, Domain (%d), Fiber (%d)%!" i did fid);
+    Mock_Service.exec t (Mock_Service_Internal.Req i);
+    Logs.app (fun m ->
+        m "Completed Req %d, Domain (%d), Fiber (%d)%!" i did fid)
   done
 
-(* Split n_req to be run in n fibers *)
+(** Split [n_req] to be run in [n_fibers] *)
 let submit_f t ~n_fibers ~n_req =
   assert (n_req >= n_fibers);
   let block = n_req / n_fibers in
@@ -61,58 +123,82 @@ let submit_f t ~n_fibers ~n_req =
   done;
   Picos_structured.Run.all !independent_ops
 
-(* Setup f to run with n_domains and specified scheduler *)
+(** Setup function [f] to run within [n_domains] each running an
+    instance of the specified scheduler *)
 let run_with ~sched ~n_domains ~f =
   let n_domains_to_spawn = n_domains - 1 in
+  let spawn_multiple sched_run =
+    sched_run @@ fun () ->
+    let extra_domains =
+      List.init n_domains_to_spawn (fun _ ->
+          Logs.app (fun m -> m "Spawning new domain");
+          Domain.spawn (fun () -> sched_run f))
+    in
+    f ();
+    List.iter Domain.join extra_domains
+  in
   match sched with
-  | Threaded ->
-      let domains =
-        List.init n_domains_to_spawn (fun _ ->
-            Domain.spawn (fun () -> Picos_threaded.run f))
-      in
-      List.iter Domain.join domains
-  | Fifos ->
-      let domains =
-        List.init n_domains_to_spawn (fun _ ->
-            Domain.spawn (fun () -> Picos_fifos.run f))
-      in
-      List.iter Domain.join domains
-  | Randos ->
-      let context = Picos_randos.context () in
-      let domains =
-        List.init n_domains_to_spawn (fun _ ->
-            Domain.spawn (fun () -> Picos_randos.runner_on_this_thread context))
-      in
-      Picos_randos.run ~context f;
-      List.iter Domain.join domains
+  | Fifos -> spawn_multiple Picos_fifos.run
+  | Threaded -> spawn_multiple Picos_threaded.run
+  | Randos -> spawn_multiple Picos_randos.run
+(* let context = Picos_randos.context () in *)
+(* let domains = *)
+(*   List.init n_domains_to_spawn (fun _ -> *)
+(*       Domain.spawn (fun () -> Picos_randos.runner_on_this_thread context)) *)
+(* in *)
+(* let f_lst = List.init n_domains (fun _ -> f) in *)
+(* Picos_randos.run ~context (fun () -> Picos_structured.Run.all f_lst); *)
+(* List.iter Domain.join domains *)
 
-let run_submissions_then_get_batches_with ~sched ~n_domains ~n_fibers ~n_req =
-  let mock_service = Mock_Service.init () in
+(** Runs [n_req] submissions per domain with a [sched] instance
+    running in each domain. [n_fibers] per domain is used to submit the requests *)
+let run_submissions mock_service ~sched ~n_domains ~n_fibers ~n_req =
+  Logs.info (fun m ->
+      m
+        "Running %s scheduler on %i domain(s) each with %i fiber(s) to handle \
+         %d req per domain"
+        (show_scheduler sched) n_domains n_fibers n_req);
   run_with ~sched ~n_domains ~f:(fun () ->
-      submit_f mock_service ~n_fibers ~n_req);
-  let internal = Mock_Service.get_internal mock_service in
-  Mock_Service_Internal.get_batches internal
+      submit_f mock_service ~n_fibers ~n_req)
 
 (* Input generators *)
 let small_nat_nonzero =
   let open Gen in
-  small_nat >|= fun i -> i + 1
+  int_bound 20 >|= fun i -> i + 1
 
 (* Test config *)
-type 'a test_cfg =
-  sched:scheduler -> n_domains:int -> n_fibers:int -> 'a -> bool
+type 'a testcase =
+  Mock_Service.t ->
+  sched:scheduler ->
+  n_domains:int ->
+  n_fibers:int ->
+  'a ->
+  bool
+
+let testcase_wrapper testcase input =
+  (* Reset id generator so fiber ids appear starting from 0 for each new run *)
+  Picos_fiber.reset_id_counter ();
+  let mock_service = Mock_Service.init () in
+  let result = testcase mock_service input in
+  let internal = Mock_Service.get_internal mock_service in
+  let batch_stats = Mock_Service_Internal.batch_stats internal in
+  Fmt.pr "Histogram:\n";
+  Mock_Service_Internal.print_stats_as_hist batch_stats;
+  Fmt.pr "\n\n%!";
+  result
 
 (* Test functions *)
-let test_fn_n_req_seen ~sched ~n_domains ~n_fibers n_req =
+let test_fn_n_req_seen t ~sched ~n_domains ~n_fibers n_req =
   assume (n_req >= n_fibers);
-  let batches_seen =
-    run_submissions_then_get_batches_with ~sched ~n_domains ~n_fibers ~n_req
-  in
+  run_submissions t ~sched ~n_domains ~n_fibers ~n_req;
+  let internal = Mock_Service.get_internal t in
+  let batches_seen = Mock_Service_Internal.get_batches internal in
   let n_req_seen =
     Array.fold_left (fun acc batch -> Array.length batch + acc) 0 batches_seen
   in
-  Printf.printf "Got n_req_seen %d\n" n_req_seen;
-  n_req_seen = n_req
+  let total_req_submitted = n_req * n_domains in
+  Logs.info (fun m -> m "Got %d n_req_seen\n" n_req_seen);
+  n_req_seen = total_req_submitted
 
 let test_fn_lst = [ ("n_req_seen", small_nat_nonzero, test_fn_n_req_seen) ]
 
@@ -126,13 +212,14 @@ let test_fn_all_for sched =
   let gen_test_configs test_fn_lst =
     let cpu_cores = Domain.recommended_domain_count () in
     List.map
-      (fun (n, gen, (t : 'a test_cfg)) ->
+      (fun (n, gen, (t : 'a testcase)) ->
         List.map
           (fun (n_domains, n_fibers) ->
             let name =
               Printf.sprintf "%s (%d domains, %d fibers)" n n_domains n_fibers
             in
-            Test.make ~print:Print.int ~name gen (t ~n_domains ~n_fibers ~sched)
+            Test.make ~print:Print.int ~name gen
+              (testcase_wrapper @@ t ~n_domains ~n_fibers ~sched)
             |> QCheck_alcotest.to_alcotest)
           [ (1, 1); (cpu_cores, 1); (1, cpu_cores); (cpu_cores, cpu_cores) ])
       test_fn_lst
@@ -141,19 +228,12 @@ let test_fn_all_for sched =
   gen_test_configs test_fn_lst
 
 let () =
-  Alcotest.run "Obatcher"
+  Logs.set_reporter (Logs_fmt.reporter ());
+  Logs_threaded.enable ();
+  Logs.set_level (Some Debug);
+  Alcotest.run ~argv:Sys.argv "Obatcher"
     [
-      ("Fifos scheduler", test_fn_all_for Randos);
+      ("Fifos scheduler", test_fn_all_for Fifos);
       ("Threaded scheduler", test_fn_all_for Threaded);
       ("Randos scheduler", test_fn_all_for Randos);
     ]
-
-let strange_behviour () =
-  let show_tid () = Printf.printf "ID %d\n" (Thread.id (Thread.self ())) in
-  show_tid ();
-  let domains =
-    List.init 4 (fun _ -> Domain.spawn (fun () -> Picos_fifos.run ignore))
-  in
-  assert (Domain.is_main_domain ());
-  show_tid ();
-  List.iter Domain.join domains
