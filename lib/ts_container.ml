@@ -14,7 +14,7 @@ let get t =
   let topup = batch_size - limit in
   let _ = Atomic.fetch_and_add t.size topup in
   (* TODO: We alllocte each time, this is bad, should reuse the *)
-  (*    array *)
+  (*    array or use a vector *)
   Array.init batch_size (fun _ -> Picos_mpscq.pop_exn t.q)
 
 let size t = Atomic.get t.size
