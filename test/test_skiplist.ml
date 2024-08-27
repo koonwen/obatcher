@@ -1,6 +1,6 @@
 open Containers
 open QCheck
-module Isl = Ds.Skiplist.Make (Int)
+module Isl = Ds.Batched_skiplist.Make (Int)
 
 let test_insert =
   QCheck.Test.make ~count:1000 ~name:"inserts return true on member lookup"

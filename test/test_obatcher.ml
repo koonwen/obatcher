@@ -1,5 +1,3 @@
-[@@@warning "-37-32-21"]
-
 open QCheck2
 
 (** Add this module just to get a fiber uid easily *)
@@ -73,7 +71,7 @@ module Mock_Service_Internal = struct
     Array.sort (fun (k1, _) (k2, _) -> Int.compare k1 k2) stats;
     stats
 
-  let pp_stats = Fmt.(array ~sep:semi (pair int int))
+  let _pp_stats = Fmt.(array ~sep:semi (pair int int))
 
   let print_stats_as_hist stats =
     let print_bar key counts = Fmt.pr "%d |%s\n" key (String.make counts '@') in
@@ -205,7 +203,7 @@ let test_fn_lin t ~sched ~n_domains ~n_fibers n_req =
       | Mock_Service_Internal.Req (rid, fid, did) -> (
           match Hashtbl.find_opt tbl (fid, did) with
           | Some l -> Hashtbl.replace tbl (fid, did) (rid :: l)
-          | None -> Hashtbl.replace tbl (fid, did) [rid]))
+          | None -> Hashtbl.replace tbl (fid, did) [ rid ]))
     seen;
   let split_req_seen_by_fid_did =
     Hashtbl.to_seq tbl |> List.of_seq

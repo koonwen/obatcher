@@ -1,11 +1,11 @@
 (library
  (name ds)
  (public_name obatcher.ds)
- (libraries picos picos.structured obatcher logs)
+ (libraries picos picos.structured obatcher)
  (synopsis "Batched Data Structures")
  (modules batched_counter batched_hashtbl batched_skiplist utils))
 
-(executable
+(test
  (name run_counter)
  (libraries ds logs logs.fmt fmt.tty picos.threaded picos.randos picos.fifos)
  (modules run_counter))

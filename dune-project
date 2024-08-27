@@ -16,5 +16,9 @@
   (ocaml (>= 5.0.0))
   (picos
    (>= 0.4.0))
+  (uring :with-test)
+  (containers :with-test)
+  (qcheck :with-test)
+  (qcheck-alcotest :with-test)
   (alcotest :with-test)
   (logs :with-test)))

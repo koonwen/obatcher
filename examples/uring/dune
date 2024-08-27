@@ -1,12 +1,10 @@
-(library
- (name batched_uring)
- (libraries uring obatcher picos logs)
- (modules batched_uring))
-
-(executable
+(test
  (name burcp)
  (libraries
-  batched_uring
+  obatcher
+  uring
+  picos
+  logs
   cmdliner
   logs.threaded
   logs.fmt
@@ -15,5 +13,4 @@
   fmt.tty
   picos.threaded
   picos.fifos
-  picos.randos)
- (modules burcp))
+  picos.randos))

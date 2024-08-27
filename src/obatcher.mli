@@ -14,7 +14,7 @@ module type Service = sig
 
   type wrapped_op =
     | Mk : 'a op * 'a Picos.Computation.t -> wrapped_op
-    (** [wrapped_op] binds the operation on the service with it's
+        (** [wrapped_op] binds the operation on the service with it's
         corresponding suspended continuation to run after its
         completion.  *)
 

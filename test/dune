@@ -1,5 +1,5 @@
 (tests
- (names test_skiplist test_obatcher bug)
+ (names test_skiplist test_obatcher)
  (libraries
   logs
   logs.fmt

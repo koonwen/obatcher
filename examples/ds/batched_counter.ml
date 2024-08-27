@@ -2,8 +2,8 @@ open Picos
 
 module Batched = struct
   type t = int Atomic.t
-
   type cfg = unit
+
   let init ?cfg:_ () = Atomic.make 0
 
   type _ op = Incr : unit op | Decr : unit op | Get : int op
@@ -11,7 +11,6 @@ module Batched = struct
 
   let run (t : t) (ops : wrapped_op array) =
     let len = Array.length ops in
-    Logs.info (fun m -> m "Processing batch of %d operations" len);
     let start = Atomic.get t in
     let delta =
       Utils.parallel_for_reduce
@@ -36,18 +35,9 @@ end
 (* Set up implicit batching *)
 include Obatcher.Make (Batched)
 
-let incr t =
-  Logs.debug (fun m -> m "Incr requested");
-  exec t Incr;
-  Logs.debug (fun m -> m "Incr completed")
-
-let decr t =
-  Logs.debug (fun m -> m "Decr requested");
-  exec t Decr;
-  Logs.debug (fun m -> m "Decr completed")
+let incr t = exec t Incr
+let decr t = exec t Decr
 
 let get t =
-  Logs.debug (fun m -> m "Got requested");
   let got = exec t Get in
-  Logs.debug (fun m -> m "Got completed with %d" got);
   got
