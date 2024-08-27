@@ -1,4 +1,4 @@
-module Counter = Batched_counter
+module Counter = Ds.Batched_counter
 
 (* Break each request into it's own fiber *)
 let n_fiber_incr t n () =
@@ -14,7 +14,7 @@ let n_fiber_get t n () =
   Picos_structured.Run.all thunks
 
 let main () =
-  let counter = Counter.init ~ctx:() in
+  let counter = Counter.init () in
   Picos_structured.Run.all
     [
       n_fiber_incr counter 10_000;
@@ -49,6 +49,7 @@ let () =
         done
       in
       spawn_ndoms_with_nthreads extra extra;
-        Logs.info (fun m -> m "Spawning %d domains with extra %d threads per domain" extra extra);
+      Logs.info (fun m ->
+          m "Spawning %d domains with extra %d threads per domain" extra extra);
       Picos_randos.run ~context main
   | _ -> Printf.eprintf "Usage: %s <threaded | fifos | randos>\n" Sys.argv.(0)

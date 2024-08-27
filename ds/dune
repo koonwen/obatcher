@@ -1,5 +1,0 @@
-(library
- (name ds)
- (public_name obatcher.ds)
- (libraries picos picos.structured obatcher)
- (synopsis "Batched Data Structures"))

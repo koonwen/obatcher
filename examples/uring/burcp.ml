@@ -1,3 +1,4 @@
+(* copy function but using uring with implicit batching enabled *)
 open Cmdliner
 
 let setup_log style_renderer level =
@@ -13,12 +14,16 @@ let scheduler_conv =
     | "threaded" -> Ok Threaded
     | "fifos" -> Ok Fifos
     | "randos" -> Ok Randos
-    | _ -> Error (`Msg "Unknown option, please provide one of <threaded | fifos | randos>")
+    | _ ->
+        Error
+          (`Msg
+            "Unknown option, please provide one of <threaded | fifos | randos>")
   in
   let printer ppf = function
     | Threaded -> Format.fprintf ppf "Threaded"
     | Fifos -> Format.fprintf ppf "Fifos"
-    | Randos -> Format.fprintf ppf "Randos" in
+    | Randos -> Format.fprintf ppf "Randos"
+  in
   Arg.conv (parser, printer)
 
 let copy backend infile outfile () =
