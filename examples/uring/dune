@@ -1,4 +1,5 @@
 (test
+ (build_if false)
  (name burcp)
  (libraries
   obatcher

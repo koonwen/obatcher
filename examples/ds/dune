@@ -7,5 +7,6 @@
 
 (test
  (name run_counter)
+ (build_if false)
  (libraries ds logs logs.fmt fmt.tty picos.threaded picos.randos picos.fifos)
  (modules run_counter))

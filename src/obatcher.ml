@@ -10,7 +10,7 @@ end
 
 module Make (S : Service) = struct
   type t = {
-    mutable internal : S.t;
+    internal : S.t;
     running : bool Atomic.t;
     container : S.wrapped_op Ts_container.t;
   }

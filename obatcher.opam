@@ -8,7 +8,7 @@ homepage: "https://github.com/koonwen/obatcher"
 doc: "https://github.com/koonwen/obatcher/"
 bug-reports: "https://github.com/koonwen/obatcher/issues"
 depends: [
-  "dune" {>= "3.0"}
+  "dune" {>= "3.9"}
   "ocaml" {>= "5.0.0"}
   "picos" {>= "0.4.0"}
   "uring" {with-test}
