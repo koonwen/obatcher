@@ -64,7 +64,7 @@ module Mock_Service_Internal = struct
     Array.iter
       (fun key ->
         match Hashtbl.find_opt tbl key with
-        | None -> Hashtbl.add tbl key 0
+        | None -> Hashtbl.add tbl key 1
         | Some v -> Hashtbl.replace tbl key (v + 1))
       batch_sizes;
     let stats = Hashtbl.to_seq tbl |> Array.of_seq in
