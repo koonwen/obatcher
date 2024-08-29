@@ -6,6 +6,7 @@
  (github koonwen/obatcher))
 (authors "Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling")
 (maintainers "Lee Koon Wen")
+(license "ISC")
 (documentation https://github.com/koonwen/obatcher/)
 
 (package
@@ -16,7 +17,6 @@
   (ocaml (>= 5.0.0))
   (picos
    (>= 0.4.0))
-  (uring :with-test)
   (containers :with-test)
   (qcheck :with-test)
   (qcheck-alcotest :with-test)

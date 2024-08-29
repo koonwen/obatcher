@@ -4,6 +4,7 @@ synopsis: "A Framework for building Batched Concurrent Data Structures"
 description: ""
 maintainer: ["Lee Koon Wen"]
 authors: ["Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling"]
+license: "ISC"
 homepage: "https://github.com/koonwen/obatcher"
 doc: "https://github.com/koonwen/obatcher/"
 bug-reports: "https://github.com/koonwen/obatcher/issues"
@@ -11,7 +12,6 @@ depends: [
   "dune" {>= "3.9"}
   "ocaml" {>= "5.0.0"}
   "picos" {>= "0.4.0"}
-  "uring" {with-test}
   "containers" {with-test}
   "qcheck" {with-test}
   "qcheck-alcotest" {with-test}
