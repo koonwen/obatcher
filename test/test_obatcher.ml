@@ -14,11 +14,12 @@ end = struct
   type id = int
 
   let next = Atomic.make 0
+  let fiber_id_key = Picos.Fiber.FLS.create ()
 
-  let fiber_id_key =
-    Picos.Fiber.FLS.new_key @@ Computed (fun () -> Atomic.fetch_and_add next 1)
+  let get_id () =
+    Picos.Fiber.FLS.get (Picos.Fiber.current ()) fiber_id_key
+      ~default:(Atomic.fetch_and_add next 1)
 
-  let get_id () = Picos.Fiber.FLS.get (Picos.Fiber.current ()) fiber_id_key
   let reset_id_counter () = Atomic.set next 0
 end
 
@@ -125,7 +126,7 @@ let submit_f t ~n_fibers ~n_req =
     assert (!left >= 0);
     independent_ops := (fun () -> submit_n_reqs t b) :: !independent_ops
   done;
-  Picos_structured.Run.all !independent_ops
+  Picos_std_structured.Run.all !independent_ops
 
 (** Setup function [f] to run within [n_domains] each running an
     instance of the specified scheduler *)
@@ -142,16 +143,18 @@ let run_with ~sched ~n_domains ~f =
     List.iter Domain.join extra_domains
   in
   match sched with
-  | Fifos -> spawn_multiple Picos_fifos.run
-  | Threaded -> spawn_multiple Picos_threaded.run
+  | Fifos -> spawn_multiple Picos_mux_fifo.run
+  | Threaded -> spawn_multiple Picos_mux_thread.run
   | Randos ->
-      let context = Picos_randos.context () in
+      let context = Picos_mux_random.context () in
       let domains =
         List.init n_domains_to_spawn (fun _ ->
-            Domain.spawn (fun () -> Picos_randos.runner_on_this_thread context))
+            Domain.spawn (fun () ->
+                Picos_mux_random.runner_on_this_thread context))
       in
       let f_lst = List.init n_domains (fun _ -> f) in
-      Picos_randos.run ~context (fun () -> Picos_structured.Run.all f_lst);
+      Picos_mux_random.run ~context (fun () ->
+          Picos_std_structured.Run.all f_lst);
       List.iter Domain.join domains
 
 (** Runs [n_req] submissions per domain with a [sched] instance

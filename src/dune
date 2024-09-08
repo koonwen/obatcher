@@ -1,4 +1,4 @@
 (library
  (name obatcher)
  (public_name obatcher)
- (libraries picos picos.structured picos.mpscq))
+ (libraries picos picos_aux.mpscq))

@@ -8,10 +8,11 @@ let parallel_for ?(n_fibers = 1) ~start ~finish body =
       done
     else
       let d = s + ((e - s) / 2) in
-      Picos_structured.Bundle.fork bundle (fun () -> work bundle s d);
+      Picos_std_structured.Bundle.fork bundle (fun () -> work bundle s d);
       work bundle (d + 1) e
   in
-  Picos_structured.Bundle.join_after (fun bundle -> work bundle start finish)
+  Picos_std_structured.Bundle.join_after (fun bundle ->
+      work bundle start finish)
 
 let parallel_for_reduce ?(n_fibers = 1) ~start ~finish ~body reduce_fn init =
   let chunk_size = (finish - start + 1) / n_fibers in
@@ -24,17 +25,17 @@ let parallel_for_reduce ?(n_fibers = 1) ~start ~finish ~body reduce_fn init =
     else
       let d = s + ((e - s) / 2) in
       let p =
-        Picos_structured.Bundle.fork_as_promise bundle (fun _ ->
+        Picos_std_structured.Bundle.fork_as_promise bundle (fun _ ->
             work bundle s d)
       in
       let right = work bundle (d + 1) e in
-      let left = Picos_structured.Promise.await p in
+      let left = Picos_std_structured.Promise.await p in
       reduce_fn left right
   in
   if finish < start then init
   else
     reduce_fn init
-      (Picos_structured.Bundle.join_after (fun bundle ->
+      (Picos_std_structured.Bundle.join_after (fun bundle ->
            work bundle start finish))
 
 (* module Par_sort = struct *)

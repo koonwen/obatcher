@@ -15,8 +15,10 @@
  (description "")
  (depends
   (ocaml (>= 5.0.0))
-  (picos
-   (>= 0.4.0))
+  (picos (= 0.5.0))
+  picos_std
+  picos_aux
+  picos_mux
   (containers :with-test)
   (qcheck :with-test)
   (qcheck-alcotest :with-test)

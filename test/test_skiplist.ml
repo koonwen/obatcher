@@ -5,7 +5,7 @@ module Isl = Ds.Batched_skiplist.Make (Int)
 let test_insert =
   QCheck.Test.make ~count:1000 ~name:"inserts return true on member lookup"
     (QCheck.list small_int) (fun ins_l ->
-      Picos_fifos.run @@ fun () ->
+      Picos_mux_fifo.run @@ fun () ->
       let t = Isl.init () in
       (* Insert all elements in l1 *)
       List.iter (Isl.insert t) ins_l;
@@ -18,7 +18,7 @@ let test_mem =
       let l' = List.uniq ~eq:(fun i1 i2 -> Int.compare i1 i2 = 0) l in
       let len = List.length l' in
       let ins_l, mem_l = List.take_drop (len / 2) l' in
-      Picos_fifos.run @@ fun () ->
+      Picos_mux_fifo.run @@ fun () ->
       let t = Isl.init () in
       (* Insert all elements in l1 *)
       List.iter (Isl.insert t) ins_l;
@@ -32,7 +32,7 @@ let test_size =
     (fun ins_l ->
       let l' = List.uniq ~eq:(fun i1 i2 -> Int.compare i1 i2 = 0) ins_l in
       let len = List.length l' in
-      Picos_fifos.run @@ fun () ->
+      Picos_mux_fifo.run @@ fun () ->
       let t = Isl.init () in
       (* Insert all elements in l1 *)
       List.iter (Isl.insert t) ins_l;

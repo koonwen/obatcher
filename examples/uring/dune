@@ -5,13 +5,14 @@
   obatcher
   uring
   picos
+  picos_std.structured
+  picos_mux.thread
+  picos_mux.fifo
+  picos_mux.random
   logs
   cmdliner
   logs.threaded
   logs.fmt
   logs.cli
   fmt.cli
-  fmt.tty
-  picos.threaded
-  picos.fifos
-  picos.randos))
+  fmt.tty))

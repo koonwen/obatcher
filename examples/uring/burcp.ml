@@ -37,7 +37,7 @@ let copy backend infile outfile () =
   let statxbuf = Statx.create () in
   Batched_uring.statx backend fd_from Statx.Mask.size statxbuf |> ignore;
   let iter = ((Statx.size statxbuf |> Int64.to_int) / bufsz) + 1 in
-  Picos_structured.Run.all
+  Picos_std_structured.Run.all
     (List.init iter (fun i () ->
          let read = Batched_uring.read backend (i * bufsz) fd_from buf in
          let buf = Cstruct.sub buf 0 read in
@@ -47,9 +47,9 @@ let copy backend infile outfile () =
 let run scheduler infile outfile () =
   let backend = Batched_uring.init () in
   match scheduler with
-  | Threaded -> Picos_threaded.run (copy backend infile outfile)
-  | Fifos -> Picos_fifos.run (copy backend infile outfile)
-  | Randos -> Picos_randos.run (copy backend infile outfile)
+  | Threaded -> Picos_mux_thread.run (copy backend infile outfile)
+  | Fifos -> Picos_mux_fifo.run (copy backend infile outfile)
+  | Randos -> Picos_mux_random.run (copy backend infile outfile)
 
 let cmd =
   let setup_log =

@@ -5,10 +5,10 @@
   logs.fmt
   logs.threaded
   containers
-  picos.structured
-  picos.threaded
-  picos.fifos
-  picos.randos
+  picos_std.structured
+  picos_mux.thread
+  picos_mux.fifo
+  picos_mux.random
   obatcher
   obatcher.ds
   qcheck
