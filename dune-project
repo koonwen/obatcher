@@ -7,7 +7,7 @@
 (authors "Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling")
 (maintainers "Lee Koon Wen")
 (license "ISC")
-(documentation https://github.com/koonwen/obatcher/)
+(documentation https://koonwen.github.io/obatcher)
 
 (package
  (name obatcher)

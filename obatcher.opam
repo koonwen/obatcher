@@ -6,7 +6,7 @@ maintainer: ["Lee Koon Wen"]
 authors: ["Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling"]
 license: "ISC"
 homepage: "https://github.com/koonwen/obatcher"
-doc: "https://github.com/koonwen/obatcher/"
+doc: "https://koonwen.github.io/obatcher"
 bug-reports: "https://github.com/koonwen/obatcher/issues"
 depends: [
   "dune" {>= "3.9"}
