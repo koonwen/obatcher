@@ -1,3 +1,6 @@
+[![OCaml-CI Build Status](https://img.shields.io/endpoint?url=https://ocaml.ci.dev/badge/koonwen/obatcher/main&logo=ocaml)](https://ocaml.ci.dev/github/koonwen/obatcher)
+- [API documentation](https://koonwen.github.io/obatcher/)
+
 # obatcher
 OCaml design framework for building batch-parallel "services". Based
 on ["Concurrent structures made
