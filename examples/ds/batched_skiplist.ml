@@ -1,6 +1,6 @@
 open Picos
 
-module Make (V : Stdlib.Map.OrderedType) = struct
+module Make (V : Map.OrderedType) = struct
   module Sequential = struct
     type t = { hdr : node; level : int ref; maxlevel : int; nil : node }
     and node = Hd of node array | Node of data | Null
