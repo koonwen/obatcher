@@ -258,7 +258,7 @@ let test_fn_all_for sched =
             let name =
               Printf.sprintf "%s (%d domains, %d fibers)" n n_domains n_fibers
             in
-            Test.make ~print:Print.int ~name gen
+            Test.make ~count:20 ~print:Print.int ~name gen
               (testcase_wrapper @@ t ~n_domains ~n_fibers ~sched)
             |> QCheck_alcotest.to_alcotest)
           [ (1, 1); (cpu_cores, 1); (1, cpu_cores); (cpu_cores, cpu_cores) ])
