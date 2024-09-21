@@ -4,50 +4,72 @@
 # obatcher
 OCaml design framework for building batch-parallel "services". Based
 on ["Concurrent structures made
-easy"](https://www.arxiv.org/abs/2408.13779) study. Whilst the paper
-was written with a focus on batched **data structures**, it is
-discovered that the mechanism can be generalized to work on any type
-of "service", where a "service" refers to any modular component of
-software that we interact with via API's.
+easy"](https://www.conference-publishing.com/download.php?Event=OOPSLAB24MAIN&Paper=23c3e926862612a7e34e440df3bba1&Version=final)
+study. Whilst the paper was written with a focus on batched **data
+structures**, it is discovered that the mechanism can be generalized
+to work on any type of "service" which stand to benefit from
+processing requests in batches. A "service" collectively refers to any
+software component that exposes a request API interface.
 
 ### Contents
 * [Description](#description)
 * [Benefits of batch-parallel service design](#benefits-of-batch-parallel-service-design)
 * [Example usage](#example-usage)
 * [Batching in the wild](#batching-in-the-wild)
-* [Results](#results)
+* [Notes](#notes)
 
 # Description
-At it's core, **obatcher** is primarily an approach to designing
-efficient concurrent services.  The key observation being that
-_"processing a batch of a priori known operations in parallel is
-easier than optimising performance for a stream of arbitrary
-asynchronous concurrent requests"._  However, designing such services
-with API's that expects users to pass in an explicit batch (e.g. array
-or list) of operations is unergonomic and requires systems to be
-designed around this pattern. **obatcher** solves this by cleverly
-wrapping explicitly batched services and then use the scheduler to
-implicitly batch operations under the hood before passing it to the
-service. From the clients perspective, interfacing with the batched
-service looks like any other plain atomic request service.
+**obatcher** is primarily a design pattern for building efficient
+concurrent services.  The key observation is that _"processing a batch
+of a priori known operations in parallel is easier than optimising
+performance for a stream of arbitrary asynchronous concurrent
+requests"._  In other words, our approach works by __separating__ (1)
+the processing of requests from (2) their reception in a parallel
+environment.
+
+(1) Instead of having the hard task of optimizing concurrent services,
+we think it's much easier to optimize services that take a batch of
+operations as input. Additionally, an **important and neccessary
+invariant** is that:
+
+> only 1 batch may run at any time.
+
+(2) However, designing services this way is unergonomic for users.  It
+requires their programs to intentionally and efficiently collect
+requests in batches (e.g. array or list) before handing them of to the
+service. **obatcher** solves this by cleverly leveraging the scheduler
+to automate the collection of batches in a efficient and low latency
+way. From a usages perspective, interfacing with a batched service
+after composing over it with **obatcher** looks like any ordinary
+service that handles atomic requests.
 
 ## Benefits of batch-parallel service design
-* [Picos scheduler agnostic](#picos-scheduler-agnostic)
-* [Thread-safe](#thread-safe)
 * [Batch optimization & Incremental parallelism](#batch-optimization-&-incremental-parallelism)
+* [Picos scheduler swappable](#picos-scheduler-swappable)
+* [Thread-safety](#thread-safety)
 * [Easy to test and reason about](#easy-to-test-and-reason-about)
 
-### Picos scheduler agnostic
-**obatcher** depends on scheduler primatives to perform
-transformations on services. As a consequence, it suffers from
+### Batch optimization & Incremental parallelism
+The benefit of taking a batch of operations as input, is that it
+potentially enables optimizations based on the spread of
+operations. Furthermore, pre-analysis of operations can better advise
+the parallel strategy employed by the service. Another neat advantage
+of batched requests is that parallelism can be added incrementally
+across operations that are "known" to be independent rather than
+having to guarantee safety across all incoming concurrent operations
+to the service.
+
+### Picos scheduler swappable
+**obatcher** depends on scheduler primatives to enable implicit
+batching transformation on services. As a consequence, it suffers from
 portability issues across different schedulers. To account for this,
 **obatcher** is built on top of
 [picos](https://www.github.com/polytipic/picos). Picos provides the
 low-level building blocks for writing schedulers. By using the same
-picos primatives to implement **obatcher**, any picos scheduler
-becomes compatible with **obatcher**.
+picos primatives to implement **obatcher**, any picos scheduler is
+also compatible with **obatcher**.
 
-### Thread-safe
+### Thread-safety
 A defining invariant of batched services is that only **a single batch
 of operations runs at any time**. To guarantee this, **obatcher** adds
 an efficient lock-free queue in front of the service to collect
@@ -55,14 +77,8 @@ operations in batches before submitting it to the service. This design
 takes inspiration from
 [**Flat-combining**](https://people.csail.mit.edu/shanir/publications/Flat%20Combining%20SPAA%2010.pdf). The
 research shows that this synchronization method provides better
-scaling properties as compared to coarse-grained locking.
-
-### Batch optimization & Incremental parallelism
-The benefit of taking a batch of operations as input is that this
-enables a whole slew optimizations based on the spread of
-operations. Furthermore, pre-analysis of operations can better advise
-how to add parallelism which can be evolved overtime rather than
-having to guarantee safety across all operations to the service.
+scaling properties as compared to employing naive coarse-grained
+locking.
 
 ### Easy to test and reason about
 Because services only handle single batches at any time, this makes it
@@ -208,10 +224,45 @@ batch runs at a time. Synchronization of parallel operations are
 performed upon entry to the BPDS. Requests that are made when the BPDS
 is busy are sent to form a batch that runs next.
 
-# Results
-Our approach here is new with unfortunately few benchmarks. However,
+# Notes
+
+### Request Latency
+A frequent question about **obatcher** that comes up is:
+
+> "Does obatcher wait for a certain number of operations to queue
+> before handing it off to the service?"
+
+The underlying question here is "How do batches form?". **obatcher**
+does not wait for requests to form before launching a batch. The
+design is such that any incoming request will try to launch the batch
+immediately. If a batch is already in-flight, then it forms the next
+incoming batch because of the single batch in-flight
+invariant. Therefore, the answer is that batches form only when
+another batches are being processed which means that you can expect
+that your request gets serviced promptly.
+
+### Backpressure
+A convenient feature of services following the **obatcher** design pattern is
+that there is a quick way to tell how efficient the underlying batch processing
+mechanism that you've implemented is against your expected rate of incoming
+concurrent requests.  Functionally, the ideal observation you should make with
+respect to the number of request in each batch overtime is that it increases
+and then plateaus at some point. This indicates that the batch processing
+mechanism will eventually settle at some fixed point where it throttles at the
+optimal batch size. This occurs when the throughput of request processing
+matches that of the rate of incoming requests. Conceptually this works because
+the more requests there are in a batch, the faster the overall throughput will
+be. Therefore, the general rule of thumb is that if your batches just increase
+monotonically, the batch processing implementation needs some work. If the
+batches settle at some batch size, you're golden and you can work toward
+bringing that number down further. Finally, if you're consistently getting a
+batch size of 1, then your workload request rate might not be large enough to
+have required batch processing in the first place!
+
+### Benchmarks
+Our approach here is new with unfortunately few benchmarks.  However,
 **obatcher** is designed almost identically to the one described in
 ["Concurrent structures made
-easy"](https://www.arxiv.org/abs/2408.13779). You can see from the
-results in the paper that batched structures scales much better than
-those where threads race for mutual exclusion.
+easy"](https://www.conference-publishing.com/download.php?Event=OOPSLAB24MAIN&Paper=23c3e926862612a7e34e440df3bba1&Version=final).
+You can see from the results in the paper that batched structures
+scales much better than those where threads race for mutual exclusion.
