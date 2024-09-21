@@ -3,7 +3,7 @@
  (public_name obatcher.ds)
  (libraries picos picos_std.structured obatcher)
  (synopsis "Batched Data Structures")
- (modules batched_counter batched_hashtbl batched_skiplist utils))
+ (modules batched_counter batched_hashtbl batched_skiplist batched_btree utils))
 
 (test
  (name run_counter)
