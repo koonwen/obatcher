@@ -1,4 +1,5 @@
 [@@@alert "-unsafe"]
+
 open QCheck2
 
 (** Add this module just to get a fiber uid easily *)
@@ -160,7 +161,7 @@ let run_with ~sched ~n_domains ~f =
           Picos_std_structured.Run.all f_lst);
       List.iter Domain.join domains
   | Multififo ->
-     let context = Picos_mux_multififo.context () in
+      let context = Picos_mux_multififo.context () in
       let domains =
         List.init n_domains_to_spawn (fun _ ->
             Domain.spawn (fun () ->

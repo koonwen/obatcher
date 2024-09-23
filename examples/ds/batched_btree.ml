@@ -938,5 +938,5 @@ module Make (V : Map.OrderedType) = struct
 
   let insert t k v = exec t (Batched.Insert (k, v))
   let search t v = exec t (Batched.Search v)
-  let size t = exec t (Batched.Size)
+  let size t = exec t Batched.Size
 end

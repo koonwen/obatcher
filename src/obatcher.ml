@@ -53,7 +53,9 @@ module type Service_Poly = sig
   type 'a t
   type cfg
   type ('a, 'b) op
-  type 'a wrapped_op = Mk : ('a, 'b) op * 'b Picos.Computation.t -> 'a wrapped_op
+
+  type 'a wrapped_op =
+    | Mk : ('a, 'b) op * 'b Picos.Computation.t -> 'a wrapped_op
 
   val init : ?cfg:cfg -> unit -> 'a t
   val run : 'a t -> 'a wrapped_op array -> unit
