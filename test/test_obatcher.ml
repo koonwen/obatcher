@@ -1,3 +1,4 @@
+[@@@alert "-unsafe"]
 open QCheck2
 
 (** Add this module just to get a fiber uid easily *)
@@ -93,11 +94,13 @@ module Mock_Service = Obatcher.Make (Mock_Service_Internal)
 type scheduler =
   | Threaded (* Forks every fiber into it's own unix thread *)
   | Fifos (* Queuing discipline *)
+  | Multififo (* Fifo across muliple domains *)
   | Randos (* Randomly selects work form the queue *)
 
 let show_scheduler = function
   | Threaded -> "threaded"
   | Fifos -> "fifos"
+  | Multififo -> "multififo"
   | Randos -> "randos"
 
 (* Iteratively submit n req operations *)
@@ -154,6 +157,17 @@ let run_with ~sched ~n_domains ~f =
       in
       let f_lst = List.init n_domains (fun _ -> f) in
       Picos_mux_random.run ~context (fun () ->
+          Picos_std_structured.Run.all f_lst);
+      List.iter Domain.join domains
+  | Multififo ->
+     let context = Picos_mux_multififo.context () in
+      let domains =
+        List.init n_domains_to_spawn (fun _ ->
+            Domain.spawn (fun () ->
+                Picos_mux_multififo.runner_on_this_thread context))
+      in
+      let f_lst = List.init n_domains (fun _ -> f) in
+      Picos_mux_multififo.run ~context (fun () ->
           Picos_std_structured.Run.all f_lst);
       List.iter Domain.join domains
 
@@ -276,4 +290,5 @@ let () =
       ("Fifos scheduler", test_fn_all_for Fifos);
       ("Threaded scheduler", test_fn_all_for Threaded);
       ("Randos scheduler", test_fn_all_for Randos);
+      ("Multififo scheduler", test_fn_all_for Multififo);
     ]

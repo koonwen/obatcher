@@ -9,6 +9,7 @@
   picos_mux.thread
   picos_mux.fifo
   picos_mux.random
+  picos_mux.multififo
   obatcher
   obatcher.ds
   qcheck
