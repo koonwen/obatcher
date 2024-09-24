@@ -5,7 +5,7 @@
 (source
  (github koonwen/obatcher))
 (authors "Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling")
-(maintainers "Lee Koon Wen")
+(maintainers "koonwen@gmail.com")
 (license "ISC")
 (documentation https://koonwen.github.io/obatcher)
 
