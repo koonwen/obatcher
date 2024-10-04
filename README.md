@@ -4,7 +4,7 @@
 # obatcher
 OCaml design framework for building batch-parallel "services". Based
 on ["Concurrent structures made
-easy"](https://www.conference-publishing.com/download.php?Event=OOPSLAB24MAIN&Paper=23c3e926862612a7e34e440df3bba1&Version=final)
+easy"](https://koonwen.github.io/assets/pdf/concurrent-structures-made-easy.pdf)
 study. Whilst the paper was written with a focus on batched **data
 structures**, it is discovered that the mechanism can be generalized
 to work on any type of "service" which stand to benefit from
