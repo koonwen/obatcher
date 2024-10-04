@@ -127,7 +127,7 @@ module BatchedCounter = struct
 	Array.iter (function
 	| Mk (Incr, comp) -> incr t; Computation.return comp ()
 	| Mk (Decr, comp) -> decr t; Computation.return comp ()
-    | Mk (Get, comp) ->  Computation.return comp !t)
+	| Mk (Get, comp) ->  Computation.return comp !t)
 end
 ```
 
