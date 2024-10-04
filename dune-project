@@ -1,12 +1,24 @@
 (lang dune 3.9)
 
 (name obatcher)
+
 (generate_opam_files)
+
 (source
  (github koonwen/obatcher))
-(authors "Lee Koon Wen" "Kiran Gopinathan" "Arthur Wendling")
+
+(authors
+ "Lee Koon Wen"
+ "Kiran Gopinathan"
+ "Arthur Wendling"
+ "Callista Le"
+ "Seth Gilbert"
+ "Ilya Sergey")
+
 (maintainers "koonwen@gmail.com")
+
 (license "ISC")
+
 (documentation https://koonwen.github.io/obatcher)
 
 (package
@@ -14,8 +26,10 @@
  (synopsis "A Framework for building Batched Concurrent Data Structures")
  (description "")
  (depends
-  (ocaml (>= 5.0.0))
-  (picos (= 0.5.0))
+  (ocaml
+   (>= 5.0.0))
+  (picos
+   (= 0.5.0))
   picos_std
   picos_aux
   picos_mux
