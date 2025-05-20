@@ -64,7 +64,7 @@ to the service.
 batching transformation on services. As a consequence, it suffers from
 portability issues across different schedulers. To account for this,
 **obatcher** is built on top of
-[picos](https://www.github.com/polytipic/picos). Picos provides the
+[picos](https://github.com/ocaml-multicore/picos). Picos provides the
 low-level building blocks for writing schedulers. By using the same
 picos primatives to implement **obatcher**, any picos scheduler is
 also compatible with **obatcher**.
